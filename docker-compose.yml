@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: velozity-postgres-v2
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: velozity
+      POSTGRES_PASSWORD: velozity_dev_password
+      POSTGRES_DB: velozity_dashboard
+    ports:
+      - "5433:5432"
+    volumes:
+      - velozity_pgdata_v2:/var/lib/postgresql/data
+
+volumes:
+  velozity_pgdata_v2:
