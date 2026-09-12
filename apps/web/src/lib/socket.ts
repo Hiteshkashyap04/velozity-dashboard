@@ -1,4 +1,4 @@
-import { io, Socket } from "socket.io-client";
+import { io, type Socket } from "socket.io-client";
 
 let socket: Socket | null = null;
 
@@ -6,11 +6,13 @@ const socketUrl =
   import.meta.env.VITE_API_URL || "http://localhost:4000";
 
 export const connectSocket = (): Socket => {
-  if (!socket) {
-    socket = io(socketUrl, {
+  if (socket === null) {
+    const newSocket = io(socketUrl, {
       withCredentials: true,
       transports: ["websocket", "polling"],
     });
+
+    socket = newSocket;
   }
 
   return socket;
@@ -21,8 +23,10 @@ export const getSocket = (): Socket | null => {
 };
 
 export const disconnectSocket = (): void => {
-  if (socket) {
-    socket.disconnect();
+  const currentSocket = socket;
+
+  if (currentSocket !== null) {
+    currentSocket.disconnect();
     socket = null;
   }
 };
