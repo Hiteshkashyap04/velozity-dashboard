@@ -1,76 +1,162 @@
-# Velozity Client Project Dashboard
+# Real-Time Client Project Dashboard
 
-A real-time project and task dashboard for Velozity Global Solutions.
+A full-stack real-time project management dashboard for agencies to manage clients, projects, tasks, team activity, and notifications.
 
-## Stack
+The application implements JWT authentication, role-based access control, PostgreSQL persistence, Prisma ORM, Socket.IO real-time updates, background overdue-task processing, and database-backed activity history.
 
-- React, TypeScript, Vite
-- Node.js, Express, Socket.IO
-- PostgreSQL 16 and Prisma 6
-- JWT access tokens and HttpOnly refresh-token cookies
-- `node-cron` overdue processing
+---
 
-## Structure
+## Features
 
-- `apps/api`: Express API, Prisma schema/migrations/seed, Socket.IO server, scheduler
-- `apps/web`: React dashboard and API/Socket.IO clients
-- `docker-compose.yml`: local PostgreSQL
+### Authentication and authorization
 
-## Prerequisites and Setup
+- JWT-based authentication
+- Short-lived access token
+- Refresh token stored in an HttpOnly cookie
+- Logout and refresh-token handling
+- Three user roles:
+  - Admin
+  - Project Manager
+  - Developer
+- API-level authorization on protected routes
+- Role-filtered project, task, activity, and notification access
+- Developers can access only their assigned tasks
+- Project Managers can manage only projects they created
+- Administrators can access all authorized project data
 
-Use Node.js 20+, npm, and Docker Desktop.
+### Project and task management
 
-```powershell
-docker compose up -d
-npm install
-npm run prisma:generate -w apps/api
-npm exec -w apps/api prisma migrate deploy
-npm run prisma:seed -w apps/api
-```
+- Create and manage projects
+- Assign projects to clients
+- Create and manage tasks
+- Assign tasks to developers
+- Task statuses:
+  - To Do
+  - In Progress
+  - In Review
+  - Done
+- Task priorities:
+  - Low
+  - Medium
+  - High
+  - Critical
+- Due dates
+- Overdue task flagging
+- Task status-change history
+- Database-persisted activity log
 
-The local API environment is in `apps/api/.env`. It uses PostgreSQL on `localhost:5433`, API port `4000`, and frontend port `5173`. Never use the development secrets in production.
+### Real-time activity feed
 
-## Run
+- Socket.IO-based real-time communication
+- Live task status updates
+- Project-specific activity rooms
+- Role-filtered activity visibility
+- Global activity feed for Administrators
+- Project activity for Project Managers
+- Assigned-task activity for Developers
+- Database-backed missed-event catch-up after reconnecting
+- Online presence count using WebSocket connections
 
-```powershell
-npm run dev -w apps/api
-npm run dev -w apps/web
-```
+### Dashboard and filters
 
-Or run both workspaces with `npm run dev`.
+- Project summary
+- Task summary
+- Tasks grouped by status
+- Tasks grouped by priority
+- Overdue task count
+- Upcoming due dates
+- Task filtering by:
+  - Project
+  - Status
+  - Priority
+  - Due-date range
+- Query-parameter-based filtering for shareable URLs
 
-Demo accounts use password `Password123!`:
+### Notifications
 
-- `admin@velozity.com`
-- `priya@velozity.com` and `rahul@velozity.com` (PM)
-- `amit@velozity.com`, `neha@velozity.com`, `vikram@velozity.com`, `sneha@velozity.com` (Developer)
+- Notification when a task is assigned to a developer
+- Notification to the relevant Project Manager when a task moves to In Review
+- Unread notification count
+- Notification dropdown
+- Mark individual notification as read
+- Mark all notifications as read
+- Real-time unread-count updates through Socket.IO
 
-## API and Authorization
+### Background processing
 
-Authentication endpoints are under `/api/auth`. Projects, tasks, dashboard summaries, and notifications are under `/api/projects`, `/api/tasks`, `/api/dashboard`, and `/api/notifications`. Admins can access all records. PMs can access their owned projects and tasks. Developers can access and update only assigned tasks. Authorization is enforced by the API and Socket.IO server, not the frontend.
+- Scheduled background job for overdue tasks
+- Overdue status is updated by the scheduled job rather than only during page load
 
-Task queries support `status`, `priority`, `projectId`, `fromDate`, and `toDate`. Notifications are user-scoped and support listing, unread counts, mark-one-read, and mark-all-read.
+---
 
-## Realtime and Scheduled Work
+## Technology Stack
 
-Socket.IO authenticates with the JWT, enforces project-room access, emits task and notification events, tracks unique online users, and sends the latest 20 relevant activities after connection for offline catch-up. The overdue job runs every five minutes, marks eligible tasks once, records `TASK_OVERDUE`, and emits `task:overdue`.
+### Frontend
 
-Presence is in memory and is suitable for one API instance only. Horizontal scaling requires Redis or another shared store and a Socket.IO adapter.
+- React
+- TypeScript
+- Vite
+- CSS
+- Socket.IO client
 
-## Schema and Limitations
+### Backend
 
-The schema contains users, role-scoped projects, tasks, activities, notifications, refresh tokens, and persisted task-overdue state. Access tokens are held in frontend memory; refresh tokens are hashed in PostgreSQL and sent as HttpOnly cookies. There is no shared presence store, background queue, or production secret management in this assessment build.
+- Node.js
+- Express
+- TypeScript
+- Socket.IO
+- JWT
+- bcrypt or equivalent password-hashing library
+- Server-side validation
 
-## Verification
+### Database
 
-```powershell
-Invoke-WebRequest http://localhost:4000/health
-npm run build -w apps/api
-npm run build -w apps/web
-```
+- PostgreSQL
+- Prisma ORM
 
-For manual verification, log in as Admin, PM, and Developer; test project/task visibility and status updates; create an assigned task; move a task to `IN_REVIEW`; mark notifications read; reconnect Socket.IO for catch-up; and confirm unauthorized API and project-room requests return `403`.
+### Development and deployment
 
-## Architecture Explanation
+- npm workspaces
+- Docker
+- Docker Compose
+- Vercel for frontend hosting
+- Persistent Node.js hosting for the backend
+- Managed PostgreSQL database
 
-The application uses a small workspace monorepo so the browser and API can evolve independently while sharing a single local database. Express owns authentication, validation, role authorization, relational queries, notifications, and dashboard aggregation. Prisma keeps database access explicit and provides migrations for schema changes such as the persisted overdue flag. Access tokens are short-lived JWTs held in browser memory, while refresh tokens are hashed in PostgreSQL and transported only through an HttpOnly cookie. Socket.IO authenticates the same access token and applies the same project visibility rules before allowing room membership or event delivery. Task mutations write their activity and notification records before emitting events, so reconnecting clients can request a bounded activity catch-up rather than relying on polling. A cron job processes overdue tasks independently of page traffic and uses the flag to avoid duplicate activity records. The dashboard consumes API-filtered task data and URL query parameters, keeping authorization and filtering decisions on the server. In-memory presence is intentionally simple for the assessment and must be replaced with Redis-backed presence for multiple API instances.
+---
+
+## Project Structure
+
+```text
+project-root/
+├── apps/
+│   ├── api/
+│   │   ├── prisma/
+│   │   │   ├── migrations/
+│   │   │   ├── schema.prisma
+│   │   │   └── seed.ts
+│   │   ├── src/
+│   │   │   ├── controllers/
+│   │   │   ├── middleware/
+│   │   │   ├── routes/
+│   │   │   ├── services/
+│   │   │   ├── sockets/
+│   │   │   ├── jobs/
+│   │   │   └── server.ts
+│   │   └── package.json
+│   │
+│   └── web/
+│       ├── src/
+│       │   ├── components/
+│       │   ├── lib/
+│       │   ├── App.tsx
+│       │   ├── App.css
+│       │   └── main.tsx
+│       └── package.json
+│
+├── package.json
+├── package-lock.json
+├── docker-compose.yml
+├── .env.example
+├── .gitignore
+└── README.md
