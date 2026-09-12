@@ -112,7 +112,7 @@ router.get("/", requireAuth, async (req, res) => {
 
 router.get("/:projectId", requireAuth, async (req, res) => {
   try {
-    const { projectId } = req.params;
+    const projectId = req.params.projectId as string;
     const user = req.user!;
 
     const project = await prisma.project.findUnique({

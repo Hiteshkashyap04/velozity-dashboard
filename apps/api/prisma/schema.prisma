@@ -37,6 +37,11 @@ enum ActivityType {
   TASK_OVERDUE
 }
 
+enum NotificationType {
+  TASK_ASSIGNED
+  TASK_IN_REVIEW
+}
+
 model User {
   id           String         @id @default(cuid())
   name         String
@@ -57,6 +62,7 @@ model Project {
   id          String     @id @default(cuid())
   name        String
   description String?
+  dueDate     DateTime?
   ownerId     String
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
@@ -75,6 +81,7 @@ model Task {
   status      TaskStatus   @default(TODO)
   priority    TaskPriority  @default(MEDIUM)
   dueDate     DateTime?
+  overdue     Boolean       @default(false)
   projectId   String
   assigneeId  String?
   createdAt   DateTime     @default(now())
@@ -113,8 +120,10 @@ model Notification {
   id        String   @id @default(cuid())
   userId    String
   taskId    String?
+  type      NotificationType
   message   String
   isRead    Boolean  @default(false)
+  readAt    DateTime?
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

@@ -132,11 +132,86 @@ export async function getCurrentUser() {
   const response = await api.get("/auth/me");
   return response.data;
 }
+
 export async function getProjects() {
   const response = await api.get("/projects");
   return response.data;
 }
+
 export async function getProjectById(projectId: string) {
   const response = await api.get(`/projects/${projectId}`);
+  return response.data;
+}
+
+export async function getTasks(params?: {
+  status?: "TODO" | "IN_PROGRESS" | "IN_REVIEW" | "DONE";
+  priority?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  projectId?: string;
+  fromDate?: string;
+  toDate?: string;
+}) {
+  const response = await api.get("/tasks", {
+    params,
+  });
+
+  return response.data;
+}
+
+export async function createTask(data: {
+  projectId: string;
+  title: string;
+  description?: string;
+  assigneeId?: string;
+  status?: "TODO" | "IN_PROGRESS" | "IN_REVIEW" | "DONE";
+  priority?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  dueDate?: string;
+}) {
+  const response = await api.post("/tasks", data);
+  return response.data;
+}
+
+export async function updateTaskStatus(
+  taskId: string,
+  status: "TODO" | "IN_PROGRESS" | "IN_REVIEW" | "DONE"
+) {
+  const response = await api.patch(`/tasks/${taskId}/status`, {
+    status,
+  });
+
+  return response.data;
+}
+
+export async function getDevelopers() {
+  const response = await api.get("/tasks/developers");
+  return response.data;
+}
+
+export async function getDashboardSummary() {
+  const response = await api.get("/dashboard/summary");
+  return response.data;
+}
+
+export async function getNotifications() {
+  const response = await api.get("/notifications");
+  return response.data;
+}
+
+export async function getUnreadNotificationCount() {
+  const response = await api.get("/notifications/unread-count");
+  return response.data;
+}
+
+export async function markNotificationAsRead(
+  notificationId: string
+) {
+  const response = await api.patch(
+    `/notifications/${notificationId}/read`
+  );
+
+  return response.data;
+}
+
+export async function markAllNotificationsAsRead() {
+  const response = await api.patch("/notifications/read-all");
   return response.data;
 }

@@ -1,0 +1,7 @@
+CREATE TYPE "NotificationType" AS ENUM ('TASK_ASSIGNED', 'TASK_IN_REVIEW');
+
+ALTER TABLE "Notification"
+ADD COLUMN "type" "NotificationType" NOT NULL DEFAULT 'TASK_ASSIGNED',
+ADD COLUMN "readAt" TIMESTAMP(3);
+
+ALTER TABLE "Notification" ALTER COLUMN "type" DROP DEFAULT;
