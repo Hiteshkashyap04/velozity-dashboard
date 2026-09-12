@@ -1,49 +1,28 @@
-import { io, type Socket } from "socket.io-client";
-import { getAccessToken } from "./api";
+import { io, Socket } from "socket.io-client";
 
 let socket: Socket | null = null;
 
-export function connectSocket() {
-  const token = getAccessToken();
+const socketUrl =
+  import.meta.env.VITE_API_URL || "http://localhost:4000";
 
-  if (!token) {
-    console.warn("Socket connection skipped because no access token exists");
-    return null;
+export const connectSocket = (): Socket => {
+  if (!socket) {
+    socket = io(socketUrl, {
+      withCredentials: true,
+      transports: ["websocket", "polling"],
+    });
   }
-
-  if (socket?.connected) {
-    return socket;
-  }
-
-  io(import.meta.env.VITE_API_URL, {
-    auth: {
-      token,
-    },
-    withCredentials: true,
-  });
-
-  socket.on("connect", () => {
-    console.log("Socket connected:", socket?.id);
-  });
-
-  socket.on("disconnect", (reason) => {
-    console.log("Socket disconnected:", reason);
-  });
-
-  socket.on("connect_error", (error) => {
-    console.error("Socket connection error:", error.message);
-  });
 
   return socket;
-}
+};
 
-export function disconnectSocket() {
+export const getSocket = (): Socket | null => {
+  return socket;
+};
+
+export const disconnectSocket = (): void => {
   if (socket) {
     socket.disconnect();
     socket = null;
   }
-}
-
-export function getSocket() {
-  return socket;
-}
+};
