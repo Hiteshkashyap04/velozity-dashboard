@@ -15,7 +15,7 @@ export function connectSocket() {
     return socket;
   }
 
-  socket = io("http://localhost:4000", {
+  io(import.meta.env.VITE_API_URL, {
     auth: {
       token,
     },
